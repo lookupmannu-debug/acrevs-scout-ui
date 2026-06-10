@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACREVS Patient Scout</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0A0E17">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        :root {
+            --bg-color: #0A0E17;
+            --panel-bg: rgba(17, 24, 39, 0.85);
+            --border-glow: #1E293B;
+            --accent-cyan: #38BDF8;
+            --accent-indigo: #6366f1;
+            --text-main: #E0E6ED;
+            --text-muted: #94A3B8;
+        }
+
+        body {
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            padding: 15px;
+            display: flex; 
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% -20%, #1e3a8a 0%, #0A0E17 60%);
+        }
+
+        .container {
+            max-width: 600px; /* Made slightly narrower for better mobile feel */
+            width: 100%; 
+            background: var(--panel-bg); 
+            border: 1px solid var(--border-glow); 
+            padding: 25px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-sizing: border-box;
+        }
+
+        /* --- GATEWAY SCREEN CSS --- */
+        #gateway_screen {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .pin-input {
+            width: 150px;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 10px;
+            background: #0F172A;
+            color: #38BDF8;
+            border: 2px solid #334155;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .pin-input:focus { border-color: #38BDF8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+        .disclaimer-box {
+            background: rgba(234, 179, 8, 0.1);
+            border-left: 4px solid #EAB308;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #CBD5E1;
+            text-align: left;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            text-align: left;
+            font-size: 13px;
+            margin-bottom: 25px;
+            cursor: pointer;
+        }
+        .checkbox-container input {
+            margin-top: 3px;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        /* --- MAIN APP CSS --- */
+        #main_app_screen { display: none; }
+        
+        .header-box { text-align: center; margin-bottom: 25px; border-bottom: 1px solid #1f2937; padding-bottom: 15px; }
+        h2 { color: var(--accent-cyan); font-weight: 600; margin: 0 0 8px 0; font-size: 22px; letter-spacing: 0.5px; }
+        .subtitle { color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;}
+        .gemini-badge { color: #A855F7; font-weight: bold; font-size: 12px; display: block; margin-top: 5px; }
+        
+        label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--accent-cyan); font-weight: 600; }
+        
+        select, textarea {
+            width: 100%; background: #0F172A; color: #FFF; border: 1px solid #334155; 
+            padding: 15px; border-radius: 12px; box-sizing: border-box; margin-bottom: 20px; 
+            font-family: 'Inter', sans-serif; font-size: 15px; transition: all 0.3s ease;
+            line-height: 1.5;
+        }
+        textarea:focus, select:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+
+        .input-hub-actions { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; background: #0F172A; padding: 12px; border-radius: 12px; border: 1px solid #1E293B; }
+        .plus-btn {
+            background: linear-gradient(135deg, #38BDF8 0%, #0284c7 100%); color: white; font-size: 24px;
+            width: 45px; height: 45px; border-radius: 10px; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold;
+        }
+        
+        .hub-panel { display: none; background: #0F172A; border: 1px solid #1E293B; padding: 15px; border-radius: 12px; margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
+        .hub-option { background: #1E293B; padding: 12px; border-radius: 8px; cursor: pointer; text-align: center; font-size: 13px; font-weight: 600; flex: 1; min-width: 100px; border: 1px solid #334155; }
+        
+        .action-layout-btn {
+            width: 100%; padding: 16px; background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white; border: none; cursor: pointer; border-radius: 12px; font-weight: 600; font-size: 16px; margin-top: 10px; box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+            transition: all 0.3s ease; letter-spacing: 0.5px;
+        }
+        .action-layout-btn:active { transform: scale(0.98); }
+        .ai-tab-btn { background: linear-gradient(135deg, #4F46E5 0%, #3730A3 100%); box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); }
+        
+        #purified_sandbox { display: none; background: #0F172A; border: 1px solid var(--accent-indigo); padding: 20px; border-radius: 12px; margin-top: 25px; }
+        #status_box { margin-top: 20px; padding: 15px; background: #000; border-radius: 12px; border: 1px dashed #334155; font-family: 'JetBrains Mono', monospace; font-size: 13px; display: none; text-align: center;}
+        
+        #result_section { display: none; background: #0F172A; border: 1px solid var(--accent-cyan); padding: 20px; border-radius: 12px; margin-top: 25px; }
+        .verified-badge { background: rgba(16, 185, 129, 0.2); color: #34D399; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; border: 1px solid #059669; }
+        
+        /* Utility */
+        .help-text { font-size: 12px; color: var(--text-muted); margin-top: -12px; margin-bottom: 15px; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div id="gateway_screen">
+            <h2 style="font-size: 28px;">ACREVS</h2>
+            <div class="subtitle">Alpha Testing Environment</div>
+            
+            <div style="margin-top: 40px;">
+                <label style="color: #E0E6ED; font-size: 16px;">Enter Invite PIN</label>
+                <input type="password" id="access_pin" class="pin-input" maxlength="4" placeholder="••••">
+            </div>
+
+            <div class="disclaimer-box">
+                <strong>Alpha Testing Notice:</strong><br>
+                This is an experimental AI tool designed for research and educational purposes only. It is <b>NOT</b> a substitute for professional medical advice, diagnosis, or treatment. In case of a medical emergency, contact your local emergency services immediately.
+            </div>
+
+            <label class="checkbox-container">
+                <input type="checkbox" id="consent_check">
+                <span>I understand that this is an experimental tool and agree to the Terms of Service.</span>
+            </label>
+
+            <button class="action-layout-btn" onclick="unlockApp()">Unlock Portal</button>
+        </div>
+
+
+        <div id="main_app_screen">
+            <div class="header-box">
+                <h2>🛡️ ACREVS SCOUT</h2>
+                <div class="subtitle">Zero-Trust Clinical Portal</div>
+                <div class="gemini-badge">✨ Powered by Gemini AI</div>
+            </div>
+
+            <div id="input_forms_area">
+                <label>1. What is your main concern?</label>
+                <textarea id="chief_complaint" rows="2" placeholder="Example: I've had a severe headache and fever for 3 days..."></textarea>
+
+                <label>2. Clinical Data & Reports</label>
+                <div class="input-hub-actions">
+                    <button class="plus-btn" onclick="toggleHub()">+</button>
+                    <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Tap to attach reports, photos, or dictate</span>
+                </div>
+
+                <div class="hub-panel" id="hub_panel">
+                    <div class="hub-option" onclick="triggerFileInput()">📄 Upload File</div>
+                    <div class="hub-option" onclick="simulateCamera()">📸 Use Camera</div>
+                    <div class="hub-option" id="voice_btn" onclick="toggleVoiceRecording()">🎙️ Dictate</div>
+                    <input type="file" id="file_picker" style="display:none;" accept=".txt,.pdf" onchange="handleFileUploaded(event)">
+                </div>
+
+                <textarea id="master_basket" rows="5" placeholder="Your extracted report data will appear here..."></textarea>
+
+                <label>3. Any specific questions for the expert?</label>
+                <textarea id="additional_questions" rows="2" placeholder="Optional: What specifically would you like to know?"></textarea>
+
+                <button id="ai_tab_btn" class="action-layout-btn ai-tab-btn" onclick="triggerLocalAIPurify()">
+                    🧠 LOCALLY PURIFY & STRUCTURE DATA
+                </button>
+            </div>
+
+            <div id="purified_sandbox">
+                <h3 style="color: var(--accent-indigo); margin-top: 0;">Review Your Data</h3>
+                <span class="help-text">Our Edge-AI has removed your personal details. Please review the structured data below.</span>
+                
+                <textarea id="purified_vignette" rows="10" style="border-color: var(--accent-indigo);"></textarea>
+
+                <button id="primary_action_btn" class="action-layout-btn" onclick="dispatchToGhostRoom()">
+                    🚀 SEND SECURELY TO EXPERT
+                </button>
+            </div>
+
+            <div id="status_box"><div id="status_text"></div></div>
+
+            <div id="result_section">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1E293B; padding-bottom: 12px; margin-bottom: 20px;">
+                    <h3 style="color: var(--accent-cyan); margin: 0; font-size: 18px;">Educational Summary</h3>
+                    <span class="verified-badge">✔️ EXPERT VERIFIED</span>
+                </div>
+                
+                <p id="vignette_ref_id" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #94A3B8;"></p>
+
+                <div style="background: rgba(56, 189, 248, 0.05); padding: 15px; border-radius: 8px; border-left: 3px solid #38BDF8;">
+                    <h4 style="color: #38BDF8; margin-top: 0; margin-bottom: 10px;">Global Standard Approach</h4>
+                    <pre id="final_roadmap_text" style="font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: #E0E6ED; font-family: 'Inter', sans-serif; background: transparent; border: none; padding: 0; margin: 0;"></pre>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <div id="qrcode" style="display: inline-block; background: white; padding: 10px; border-radius: 8px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded',()=>{eval(atob('CiAgICAgICAgY29uc3QgTE9DQUxfQlJJREdFX1VSTCA9ICJodHRwOi8vMTI3LjAuMC4xOjUwMDMiOwogICAgICAgIGNvbnN0IEdIT1NUX1JPT01fVVJMID0gImh0dHA6Ly8xMDAuODIuODMuMTA3OjUwMDAiOyAKICAgICAgICAKICAgICAgICAvLyDwn5SSIFNFQ1VSSVRZIEdBVEUgTE9HSUMKICAgICAgICBmdW5jdGlvbiB1bmxvY2tBcHAoKSB7CiAgICAgICAgICAgIGNvbnN0IHBpbiA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdhY2Nlc3NfcGluJykudmFsdWU7CiAgICAgICAgICAgIGNvbnN0IGNvbnNlbnQgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnY29uc2VudF9jaGVjaycpLmNoZWNrZWQ7CiAgICAgICAgICAgIAogICAgICAgICAgICAvLyBTZXQgeW91ciBiZXRhIHRlc3RpbmcgUElOIGhlcmUgKGUuZy4sIDc3ODEpCiAgICAgICAgICAgIGlmIChwaW4gPT09ICI3NzgxIiAmJiBjb25zZW50KSB7CiAgICAgICAgICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZ2F0ZXdheV9zY3JlZW4nKS5zdHlsZS5kaXNwbGF5ID0gJ25vbmUnOwogICAgICAgICAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ21haW5fYXBwX3NjcmVlbicpLnN0eWxlLmRpc3BsYXkgPSAnYmxvY2snOwogICAgICAgICAgICB9IGVsc2UgaWYgKCFjb25zZW50KSB7CiAgICAgICAgICAgICAgICBhbGVydCgiUGxlYXNlIGFncmVlIHRvIHRoZSBUZXJtcyBvZiBTZXJ2aWNlIHRvIHByb2NlZWQuIik7CiAgICAgICAgICAgIH0gZWxzZSB7CiAgICAgICAgICAgICAgICBhbGVydCgiSW5jb3JyZWN0IFBJTi4gQWNjZXNzIERlbmllZC4iKTsKICAgICAgICAgICAgfQogICAgICAgIH0KCiAgICAgICAgLy8gLS0tIEFQUCBMT0dJQyAtLS0KICAgICAgICBmdW5jdGlvbiB0b2dnbGVIdWIoKSB7CiAgICAgICAgICAgIGNvbnN0IHBhbmVsID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImh1Yl9wYW5lbCIpOwogICAgICAgICAgICBwYW5lbC5zdHlsZS5kaXNwbGF5ID0gKHBhbmVsLnN0eWxlLmRpc3BsYXkgPT09ICJmbGV4IikgPyAibm9uZSIgOiAiZmxleCI7CiAgICAgICAgfQogICAgICAgIGZ1bmN0aW9uIHRyaWdnZXJGaWxlSW5wdXQoKSB7IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJmaWxlX3BpY2tlciIpLmNsaWNrKCk7IH0KICAgICAgICBmdW5jdGlvbiBzaW11bGF0ZUNhbWVyYSgpIHsKICAgICAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoIm1hc3Rlcl9iYXNrZXQiKS52YWx1ZSArPSAiXG5bQ2FwdHVyZWQgT0NSXTogMjh5byBmZW1hbGUsIGdyZWVuaXNoIGRpc2NoYXJnZS4gUHQgbmFtZTogU2FyYWggSmVua2lucy4gUGg6IDU1NS0wMTkyLiI7CiAgICAgICAgICAgIGFsZXJ0KCLwn5O4IENhbWVyYSBPQ1IgQWRkZWQhIik7CiAgICAgICAgfQoKICAgICAgICBmdW5jdGlvbiB0cmlnZ2VyTG9jYWxBSVB1cmlmeSgpIHsKICAgICAgICAgICAgY29uc3QgY2hpZWYgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgiY2hpZWZfY29tcGxhaW50IikudmFsdWUudHJpbSgpOwogICAgICAgICAgICBjb25zdCBkYXRhID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoIm1hc3Rlcl9iYXNrZXQiKS52YWx1ZS50cmltKCk7CiAgICAgICAgICAgIGNvbnN0IHF1ZXN0aW9ucyA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJhZGRpdGlvbmFsX3F1ZXN0aW9ucyIpLnZhbHVlLnRyaW0oKTsKCiAgICAgICAgICAgIGlmKCFjaGllZiAmJiAhZGF0YSkgeyBhbGVydCgiUGxlYXNlIHByb3ZpZGUgc29tZSBkZXRhaWxzIGZpcnN0LiIpOyByZXR1cm47IH0KCiAgICAgICAgICAgIGNvbnN0IGFpQnRuID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImFpX3RhYl9idG4iKTsKICAgICAgICAgICAgYWlCdG4uZGlzYWJsZWQgPSB0cnVlOwogICAgICAgICAgICBhaUJ0bi5pbm5lclRleHQgPSAi4pqZ77iPIFNDUlVCQklORyBEQVRBLi4uIjsKCiAgICAgICAgICAgIGNvbnN0IHN0YXR1c0JveCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJzdGF0dXNfYm94Iik7CiAgICAgICAgICAgIHN0YXR1c0JveC5zdHlsZS5kaXNwbGF5ID0gImJsb2NrIjsKICAgICAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInN0YXR1c190ZXh0IikuaW5uZXJIVE1MID0gIjxzcGFuIHN0eWxlPSdjb2xvcjogIzM4QkRGODsnPlJlbW92aW5nIFBlcnNvbmFsIERldGFpbHMuLi48L3NwYW4+IjsKCiAgICAgICAgICAgIGZldGNoKGAke0xPQ0FMX0JSSURHRV9VUkx9L2xvY2FsX3B1cmlmeWAsIHsKICAgICAgICAgICAgICAgIG1ldGhvZDogIlBPU1QiLCBoZWFkZXJzOiB7ICJDb250ZW50LVR5cGUiOiAiYXBwbGljYXRpb24vanNvbiIgfSwKICAgICAgICAgICAgICAgIGJvZHk6IEpTT04uc3RyaW5naWZ5KHsgY2hpZWY6IGNoaWVmLCBkYXRhOiBkYXRhLCBxdWVzdGlvbnM6IHF1ZXN0aW9ucyB9KQogICAgICAgICAgICB9KQogICAgICAgICAgICAudGhlbihyZXMgPT4gcmVzLmpzb24oKSkKICAgICAgICAgICAgLnRoZW4ocmVzcG9uc2UgPT4gewogICAgICAgICAgICAgICAgaWYocmVzcG9uc2Uuc3RhdHVzID09PSAic3VjY2VzcyIpIHsKICAgICAgICAgICAgICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgicHVyaWZpZWRfdmlnbmV0dGUiKS52YWx1ZSA9IHJlc3BvbnNlLnB1cmlmaWVkX2RhdGE7CiAgICAgICAgICAgICAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInB1cmlmaWVkX3NhbmRib3giKS5zdHlsZS5kaXNwbGF5ID0gImJsb2NrIjsKICAgICAgICAgICAgICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgic3RhdHVzX2JveCIpLnN0eWxlLmRpc3BsYXkgPSAibm9uZSI7CiAgICAgICAgICAgICAgICAgICAgYWlCdG4uaW5uZXJUZXh0ID0gIuKclO+4jyBEQVRBIFBVUklGSUVEIjsKICAgICAgICAgICAgICAgIH0gZWxzZSB7CiAgICAgICAgICAgICAgICAgICAgYWxlcnQoIlByb2Nlc3NpbmcgRmFpbGVkLiIpOwogICAgICAgICAgICAgICAgICAgIGFpQnRuLmRpc2FibGVkID0gZmFsc2U7CiAgICAgICAgICAgICAgICAgICAgYWlCdG4uaW5uZXJUZXh0ID0gIvCfp6AgTE9DQUxMWSBQVVJJRlkgJiBTVFJVQ1RVUkUgREFUQSI7CiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0pLmNhdGNoKGUgPT4gewogICAgICAgICAgICAgICAgYWxlcnQoIkVycm9yIGNvbm5lY3RpbmcgdG8gQnJpZGdlLiIpOwogICAgICAgICAgICAgICAgYWlCdG4uZGlzYWJsZWQgPSBmYWxzZTsKICAgICAgICAgICAgfSk7CiAgICAgICAgfQoKICAgICAgICBmdW5jdGlvbiBkaXNwYXRjaFRvR2hvc3RSb29tKCkgewogICAgICAgICAgICBjb25zdCBmaW5hbFB1cmlmaWVkVGV4dCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJwdXJpZmllZF92aWduZXR0ZSIpLnZhbHVlLnRyaW0oKTsKICAgICAgICAgICAgaWYoIWZpbmFsUHVyaWZpZWRUZXh0KSByZXR1cm47IAogICAgICAgICAgICAKICAgICAgICAgICAgY29uc3QgYnRuID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInByaW1hcnlfYWN0aW9uX2J0biIpOwogICAgICAgICAgICBidG4uZGlzYWJsZWQgPSB0cnVlOwogICAgICAgICAgICBidG4uaW5uZXJUZXh0ID0gIlNFTkRJTkcgU0VDVVJFTFkuLi4iOwogICAgICAgICAgICAKICAgICAgICAgICAgY29uc3Qgc3RhdHVzQm94ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInN0YXR1c19ib3giKTsKICAgICAgICAgICAgc3RhdHVzQm94LnN0eWxlLmRpc3BsYXkgPSAiYmxvY2siOwogICAgICAgICAgICBjb25zdCB0eG5faWQgPSAiVFhOLSIgKyBNYXRoLmZsb29yKDEwMDAwMCArIE1hdGgucmFuZG9tKCkgKiA5MDAwMDApOwogICAgICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgic3RhdHVzX3RleHQiKS5pbm5lckhUTUwgPSAiU2VuZGluZyBFbmNyeXB0ZWQgRGF0YSB0byBFeHBlcnQuLi4iOwoKICAgICAgICAgICAgZmV0Y2goYCR7R0hPU1RfUk9PTV9VUkx9L3VwbG9hZF92aWduZXR0ZWAsIHsKICAgICAgICAgICAgICAgIG1ldGhvZDogIlBPU1QiLCBoZWFkZXJzOiB7ICJDb250ZW50LVR5cGUiOiAiYXBwbGljYXRpb24vanNvbiIgfSwKICAgICAgICAgICAgICAgIGJvZHk6IEpTT04uc3RyaW5naWZ5KHsgdHhuX2lkOiB0eG5faWQsIGNvbmNlcm46ICJTdHJ1Y3R1cmVkIENsaW5pY2FsIFZpZ25ldHRlIiwgdmlnbmV0dGU6IGZpbmFsUHVyaWZpZWRUZXh0LCBoYXJkd2FyZV9hbGVydDogIm5vIiB9KQogICAgICAgICAgICB9KQogICAgICAgICAgICAudGhlbihyZXMgPT4gcmVzLmpzb24oKSkKICAgICAgICAgICAgLnRoZW4oZGF0YSA9PiB7CiAgICAgICAgICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgic3RhdHVzX3RleHQiKS5pbm5lckhUTUwgPSBgPHNwYW4gc3R5bGU9J2NvbG9yOmxpbWUnPuKchSBSZXF1ZXN0IFNlbnQhIFBvbGxpbmcgZm9yIEV4cGVydCBSZXBseS4uLjwvc3Bhbj5gOwogICAgICAgICAgICAgICAgc3RhcnRQb2xsaW5nKHR4bl9pZCk7CiAgICAgICAgICAgIH0pLmNhdGNoKGUgPT4gewogICAgICAgICAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInN0YXR1c190ZXh0IikuaW5uZXJIVE1MID0gYDxzcGFuIHN0eWxlPSdjb2xvcjpyZWQnPuKaoO+4jyBDb25uZWN0aW9uIE9mZmxpbmUuPC9zcGFuPmA7CiAgICAgICAgICAgICAgICBidG4uZGlzYWJsZWQgPSBmYWxzZTsKICAgICAgICAgICAgICAgIGJ0bi5pbm5lclRleHQgPSAi8J+agCBTRU5EIFNFQ1VSRUxZIFRPIEVYUEVSVCI7CiAgICAgICAgICAgIH0pOwogICAgICAgIH0KCiAgICAgICAgZnVuY3Rpb24gc3RhcnRQb2xsaW5nKHR4bl9pZCkgewogICAgICAgICAgICBjb25zdCBwb2xsSW50ZXJ2YWwgPSBzZXRJbnRlcnZhbCgoKSA9PiB7CiAgICAgICAgICAgICAgICBmZXRjaChgJHtHSE9TVF9ST09NX1VSTH0vZG93bmxvYWRfZXhwZXJ0X3BheWxvYWQ/dHhuX2lkPSR7dHhuX2lkfWApCiAgICAgICAgICAgICAgICAudGhlbihyZXMgPT4gcmVzLmpzb24oKSkKICAgICAgICAgICAgICAgIC50aGVuKGRhdGEgPT4gewogICAgICAgICAgICAgICAgICAgIGlmIChkYXRhLnN0YXR1cyA9PT0gInN1Y2Nlc3MiICYmIGRhdGEuZGF0YSkgewogICAgICAgICAgICAgICAgICAgICAgICBjbGVhckludGVydmFsKHBvbGxJbnRlcnZhbCk7CiAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICBsZXQgZmluYWxEYXRhID0gZGF0YS5kYXRhOwogICAgICAgICAgICAgICAgICAgICAgICB0cnkgewogICAgICAgICAgICAgICAgICAgICAgICAgICAgaWYgKHR5cGVvZiBmaW5hbERhdGEgPT09ICdzdHJpbmcnKSB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbGV0IHBhcnNlZE9iaiA9IEpTT04ucGFyc2UoZmluYWxEYXRhLnJlcGxhY2UoL2BgYGpzb24vZ2ksICIiKS5yZXBsYWNlKC9gYGAvZ2ksICIiKS50cmltKCkpOwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlmIChwYXJzZWRPYmogJiYgcGFyc2VkT2JqLmNsaW5pY2FsX3dvcmtmbG93X3BheWxvYWQpIGZpbmFsRGF0YSA9IHBhcnNlZE9iai5jbGluaWNhbF93b3JrZmxvd19wYXlsb2FkOwogICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICB9IGNhdGNoIChlKSB7fQoKICAgICAgICAgICAgICAgICAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImlucHV0X2Zvcm1zX2FyZWEiKS5zdHlsZS5kaXNwbGF5ID0gIm5vbmUiOwogICAgICAgICAgICAgICAgICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgicHVyaWZpZWRfc2FuZGJveCIpLnN0eWxlLmRpc3BsYXkgPSAibm9uZSI7CiAgICAgICAgICAgICAgICAgICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJzdGF0dXNfYm94Iikuc3R5bGUuZGlzcGxheSA9ICJub25lIjsKICAgICAgICAgICAgICAgICAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInJlc3VsdF9zZWN0aW9uIikuc3R5bGUuZGlzcGxheSA9ICJibG9jayI7CiAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgidmlnbmV0dGVfcmVmX2lkIikuaW5uZXJUZXh0ID0gIlJlZiBJRDogIiArIHR4bl9pZDsKICAgICAgICAgICAgICAgICAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImZpbmFsX3JvYWRtYXBfdGV4dCIpLmlubmVyVGV4dCA9IGZpbmFsRGF0YTsKCiAgICAgICAgICAgICAgICAgICAgICAgIG5ldyBRUkNvZGUoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoInFyY29kZSIpLCB7IHRleHQ6IGBBQ1JFVlMtQVVUSDoke3R4bl9pZH1gLCB3aWR0aDogODAsIGhlaWdodDogODAsIGNvbG9yRGFyayA6ICIjMUUyOTNCIiwgY29sb3JMaWdodCA6ICIjZmZmZmZmIiB9KTsKCiAgICAgICAgICAgICAgICAgICAgICAgIGNvbnN0IGJ0biA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJhaV90YWJfYnRuIik7IAogICAgICAgICAgICAgICAgICAgICAgICBidG4uZGlzYWJsZWQgPSBmYWxzZTsgYnRuLnN0eWxlLmRpc3BsYXkgPSAiYmxvY2siOyBidG4uaW5uZXJUZXh0ID0gIvCflIQgU1RBUlQgTkVXIFNFU1NJT04iOyAKICAgICAgICAgICAgICAgICAgICAgICAgYnRuLm9uY2xpY2sgPSAoKSA9PiBsb2NhdGlvbi5yZWxvYWQoKTsKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICB9KS5jYXRjaChlID0+IGNvbnNvbGUubG9nKCJXYWl0aW5nLi4uIikpOwogICAgICAgICAgICB9LCAzMDAwKTsKICAgICAgICB9CgogICAgICAgIC8vIPCfm6HvuI8gU2VydmljZSBXb3JrZXIgSG9vayAoUFdBKQogICAgICAgIGlmICgnc2VydmljZVdvcmtlcicgaW4gbmF2aWdhdG9yKSB7CiAgICAgICAgICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCdsb2FkJywgKCkgPT4gewogICAgICAgICAgICAgICAgbmF2aWdhdG9yLnNlcnZpY2VXb3JrZXIucmVnaXN0ZXIoJ3N3LmpzJykuY2F0Y2goZXJyID0+IGNvbnNvbGUubG9nKCdTVyBmYWlsZWQnLCBlcnIpKTsKICAgICAgICAgICAgfSk7CiAgICAgICAgfQogICAg'));});
+    </script>
+</body>
+</html>
